@@ -1,0 +1,214 @@
+{{template "base" .}}
+
+{{define "content"}}
+<div class="container pt-3">
+    <div class="row">
+        <h2>Reservation</h2>
+    </div>
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <h3>Search for availability</h3>
+            <form method="post" action="reservation.html">
+                    <div id="reservation-dates">
+                        <div class="row">
+                            <div class="col">
+                                <label for="starting_date" class="form-label">Starting date</label>
+                                <input class="form-control" type="text" name="start" id="starting_date" aria-describedby="startDateHelp" required>
+                                <div id="emailHelp" class="form-text">Enter your starting date</div>
+                            </div>
+                            <div class="col">
+                                <label for="ending_date" class="form-label">Ending date</label>
+                                <input class="form-control" type="text" name="end" id="ending_date" aria-describedby="endDateHelp" required>
+                                <div id="emailHelp" class="form-text">Enter your ending date</div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                <button type="submit" class="btn btn-primary" >Search availability</button>
+            </form>
+            <button id="submitBtn">Submit</button><button id="testBtn">Test</button>
+        </div>
+    </div>
+</div>
+
+{{end}}
+
+{{define "js"}}
+<script src="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.2.0/dist/js/datepicker-full.min.js"></script>
+<script>
+    const elem = document.getElementById("reservation-dates")
+    const rangepicker = new DateRangePicker(elem,{
+        buttonClass: 'btn',
+        format: "dd/mm/yyyy"
+    })
+</script>
+<script>
+    let attention = Prompt();
+    
+    (function () {
+        'use strict'
+
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        var forms = document.querySelectorAll('.needs-validation')
+
+        // Loop over them and prevent submission
+        Array.prototype.slice.call(forms)
+            .forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault()
+                        event.stopPropagation()
+                    }
+
+                    form.classList.add('was-validated')
+                }, false)
+            })
+    })()
+
+    document.getElementById('submitBtn').addEventListener("click", function() {
+        let html = `
+        <form id="check-availability-form" action="" method="post" novalidate class="needs-validation">
+            <div class="row">
+                <div class="col">
+                    <div class="row" id="reservation-dates-modal">
+                        <div class="col">
+                            <input disabled required class="form-control" type="text" name="start" id="start" placeholder="Arrival" >
+                        </div>
+                        <div class="col">
+                            <input disabled required class="form-control" type="text" name="end" id="end" placeholder="Departure" >
+                        </div>
+                    </div>
+                </div>
+            </div/
+        </form>
+        `
+
+        attention.custom({msg:html});
+    })
+
+    document.getElementById('testBtn').addEventListener("click", function () {
+            //notifyModal('title',"<em>Hello world</em>","error","Close")
+
+            attention.error({msg:"Testing"})
+        })
+
+    function notify(message, messageType){
+        notie.alert({
+                type: messageType,
+                text: message,
+            })
+    }
+
+    function notifyModal (title, modal, icon, confirmationButtonText){
+        Swal.fire({
+            title: title,
+            html: modal,
+            icon: icon,
+            confirmButtonText: confirmationButtonText
+        })
+    }
+
+    // Prompt is our JS Script to make notifications, error or succes messages
+    function Prompt(){
+        let toast = function(params){
+            const {
+                msg="test",
+                icon="success",
+                position="top-end"
+            }=params;
+
+            const Toast = Swal.mixin({
+                toast: true,
+                title:msg,
+                position: position,
+                icon:icon,
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            })
+
+            Toast.fire({})
+        }
+
+        let success = function(c){
+            const {
+                title = "test",
+                msg="test",
+                footer="test"
+            } = c;
+
+            Swal.fire({
+                icon: 'success',
+                title: title,
+                text: msg,
+                footer: footer
+            })
+        }
+
+        let error = function (c) {
+            const {
+                title = "test",
+                msg = "test",
+                footer = "test"
+            } = c;
+
+            Swal.fire({
+                icon: 'error',
+                title: title,
+                text: msg,
+                footer: footer
+            })
+        }
+
+        async function custom(c){
+            const {
+                msg="Test message",
+                title="Choose your dates"
+            } =c
+
+            const { value: formValues } = await Swal.fire({
+                title: title,
+                html:msg,
+                backdrop:false,
+                focusConfirm: false,
+                showCancelButton:true,
+                willOpen: () => {
+                    const elem = document.getElementById("reservation-dates-modal");
+                    const rp = new DateRangePicker(elem, {
+                        format:'dd-mm-yyyy',
+                        showOnFocus:true,
+                        orientation:"top"
+                    })
+                },
+                didOpen: () => {
+                    document.getElementById('start').removeAttribute('disabled')
+                    document.getElementById('end').removeAttribute('disabled')
+                },
+                preConfirm: () => {
+                    return [
+                        document.getElementById('start').value,
+                        document.getElementById('end').value
+                    ]
+                }
+            })
+
+            if (formValues) {
+                Swal.fire(JSON.stringify(formValues))
+            }
+
+        }
+
+        return {
+            toast:toast,
+            success:success,
+            error:error,
+            custom:custom
+        }
+    }
+
+</script>
+{{end}}

@@ -38,15 +38,30 @@ func (m *Repository) Home(w http.ResponseWriter, r *http.Request) {
 
 // About renders the about page
 func (m *Repository) About(w http.ResponseWriter, r *http.Request) {
-	//logic
-	stringMap := make(map[string]string)
-	stringMap["test"] = "Hello, again"
+	render.RenderTemplate(w, "about.page.html", &models.TemplateData{})
+}
 
-	remoteIP := m.App.Session.GetString(r.Context(), "remote_ip")
+// Colonels renders the colonels room page
+func (m *Repository) Colonels(w http.ResponseWriter, r *http.Request) {
+	render.RenderTemplate(w, "colonels_quarters.page.html", &models.TemplateData{})
+}
 
-	stringMap["remote_ip"] = remoteIP
+// Majors renders the majors room page
+func (m *Repository) Majors(w http.ResponseWriter, r *http.Request) {
+	render.RenderTemplate(w, "majors_suite.page.html", &models.TemplateData{})
+}
 
-	render.RenderTemplate(w, "about.page.html", &models.TemplateData{
-		StringMap: stringMap,
-	})
+// Contact renders the contact page
+func (m *Repository) Contact(w http.ResponseWriter, r *http.Request) {
+	render.RenderTemplate(w, "contact.page.html", &models.TemplateData{})
+}
+
+// Reservation renders the check reservation page
+func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
+	render.RenderTemplate(w, "reservation.page.html", &models.TemplateData{})
+}
+
+// MakeReservation renders the make reservation page
+func (m *Repository) MakeReservation(w http.ResponseWriter, r *http.Request) {
+	render.RenderTemplate(w, "make_reservation.page.html", &models.TemplateData{})
 }

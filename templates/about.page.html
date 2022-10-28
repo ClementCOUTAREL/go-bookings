@@ -1,14 +1,18 @@
 {{template "base" .}}
 
 {{define "content"}}
-<h1>About</h1>
-
-<p>
-    {{if ne (index .StringMap "remote_ip") ""}}
-        Your remote IP address is {{index .StringMap "remote_ip"}}
-    {{else}}
-        I don't know your remote IP address
-    {{end}}
-</p>
+<div class="container pt-3">
+    <div class="row">
+        <h1>About</h1>
+        
+        <p>
+            {{if ne (index .StringMap "remote_ip") ""}}
+                Your remote IP address is {{index .StringMap "remote_ip"}}
+            {{else}}
+                I don't know your remote IP address
+            {{end}}
+        </p>
+    </div>
+</div>
 
 {{end}}
