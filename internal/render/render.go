@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/ccoutarel/bookings/pkg/config"
-	"github.com/ccoutarel/bookings/pkg/models"
+	"github.com/ccoutarel/bookings/internal/config"
+	"github.com/ccoutarel/bookings/internal/models"
 	"github.com/justinas/nosurf"
 )
 

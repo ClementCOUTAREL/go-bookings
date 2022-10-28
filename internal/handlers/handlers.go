@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 
-	"github.com/ccoutarel/bookings/pkg/config"
-	"github.com/ccoutarel/bookings/pkg/models"
-	"github.com/ccoutarel/bookings/pkg/render"
+	"github.com/ccoutarel/bookings/internal/config"
+	"github.com/ccoutarel/bookings/internal/models"
+	"github.com/ccoutarel/bookings/internal/render"
 )
 
 // Repositroy is the repository type
@@ -68,6 +70,29 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	end := r.Form.Get("end")
 
 	w.Write([]byte(fmt.Sprintf("Start date is %s and end date is %s", start, end)))
+}
+
+type jsonResponse struct {
+	OK      bool   `json:"ok"`
+	Message string `json:"message"`
+}
+
+// AvailabilityJson handles request for Availablitiy and sends JSON
+func (m *Repository) AvailabilityJson(w http.ResponseWriter, r *http.Request) {
+	resp := jsonResponse{
+		OK:      true,
+		Message: "Available",
+	}
+
+	out, err := json.MarshalIndent(resp, "", "     ")
+	if err != nil {
+		log.Println("error creating JSON response")
+	}
+
+	log.Println(string(out))
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
 }
 
 // MakeReservation renders the make reservation page
