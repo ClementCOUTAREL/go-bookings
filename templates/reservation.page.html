@@ -8,7 +8,8 @@
     <div class="row">
         <div class="col-md-8 mx-auto">
             <h3>Search for availability</h3>
-            <form method="post" action="reservation.html">
+            <form method="post" action="/reservation" class="needs-validation">
+                <input type="hidden" name="csrf_token" value={{.CSRFToken}}>
                     <div id="reservation-dates">
                         <div class="row">
                             <div class="col">
@@ -34,181 +35,41 @@
 {{end}}
 
 {{define "js"}}
-<script src="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.2.0/dist/js/datepicker-full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.2.0/dist/js/datepicker-full.min.js"></script>
+
 <script>
     const elem = document.getElementById("reservation-dates")
-    const rangepicker = new DateRangePicker(elem,{
-        buttonClass: 'btn',
-        format: "dd/mm/yyyy"
-    })
-</script>
-<script>
-    let attention = Prompt();
-    
-    (function () {
-        'use strict'
+    const rangepicker = new DateRangePicker(elem, {
+            buttonClass: 'btn',
+            format: "dd/mm/yyyy"
+        })
 
-        // Fetch all the forms we want to apply custom Bootstrap validation styles to
-        var forms = document.querySelectorAll('.needs-validation')
-
-        // Loop over them and prevent submission
-        Array.prototype.slice.call(forms)
-            .forEach(function (form) {
-                form.addEventListener('submit', function (event) {
-                    if (!form.checkValidity()) {
-                        event.preventDefault()
-                        event.stopPropagation()
-                    }
-
-                    form.classList.add('was-validated')
-                }, false)
-            })
-    })()
-
-    document.getElementById('submitBtn').addEventListener("click", function() {
-        let html = `
-        <form id="check-availability-form" action="" method="post" novalidate class="needs-validation">
-            <div class="row">
-                <div class="col">
-                    <div class="row" id="reservation-dates-modal">
-                        <div class="col">
-                            <input disabled required class="form-control" type="text" name="start" id="start" placeholder="Arrival" >
-                        </div>
-                        <div class="col">
-                            <input disabled required class="form-control" type="text" name="end" id="end" placeholder="Departure" >
-                        </div>
+    document.getElementById('submitBtn').addEventListener("click", function () {
+    let html = `
+    <form id="check-availability-form" action="" method="post" novalidate class="needs-validation">
+        <div class="row">
+            <div class="col">
+                <div class="row" id="reservation-dates-modal">
+                    <div class="col">
+                        <input disabled required class="form-control" type="text" name="start" id="start"
+                            placeholder="Arrival">
+                    </div>
+                    <div class="col">
+                        <input disabled required class="form-control" type="text" name="end" id="end"
+                            placeholder="Departure">
                     </div>
                 </div>
-            </div/
-        </form>
+            </div>
+        </div / </form>
         `
-
-        attention.custom({msg:html});
-    })
-
-    document.getElementById('testBtn').addEventListener("click", function () {
-            //notifyModal('title',"<em>Hello world</em>","error","Close")
-
-            attention.error({msg:"Testing"})
+    
+        attention.custom({ msg: html });
         })
-
-    function notify(message, messageType){
-        notie.alert({
-                type: messageType,
-                text: message,
-            })
-    }
-
-    function notifyModal (title, modal, icon, confirmationButtonText){
-        Swal.fire({
-            title: title,
-            html: modal,
-            icon: icon,
-            confirmButtonText: confirmationButtonText
+    
+        document.getElementById('testBtn').addEventListener("click", function () {
+        //notifyModal('title',"<em>Hello world</em>","error","Close")
+    
+        attention.error({ msg: "Testing" })
         })
-    }
-
-    // Prompt is our JS Script to make notifications, error or succes messages
-    function Prompt(){
-        let toast = function(params){
-            const {
-                msg="test",
-                icon="success",
-                position="top-end"
-            }=params;
-
-            const Toast = Swal.mixin({
-                toast: true,
-                title:msg,
-                position: position,
-                icon:icon,
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true,
-                didOpen: (toast) => {
-                    toast.addEventListener('mouseenter', Swal.stopTimer)
-                    toast.addEventListener('mouseleave', Swal.resumeTimer)
-                }
-            })
-
-            Toast.fire({})
-        }
-
-        let success = function(c){
-            const {
-                title = "test",
-                msg="test",
-                footer="test"
-            } = c;
-
-            Swal.fire({
-                icon: 'success',
-                title: title,
-                text: msg,
-                footer: footer
-            })
-        }
-
-        let error = function (c) {
-            const {
-                title = "test",
-                msg = "test",
-                footer = "test"
-            } = c;
-
-            Swal.fire({
-                icon: 'error',
-                title: title,
-                text: msg,
-                footer: footer
-            })
-        }
-
-        async function custom(c){
-            const {
-                msg="Test message",
-                title="Choose your dates"
-            } =c
-
-            const { value: formValues } = await Swal.fire({
-                title: title,
-                html:msg,
-                backdrop:false,
-                focusConfirm: false,
-                showCancelButton:true,
-                willOpen: () => {
-                    const elem = document.getElementById("reservation-dates-modal");
-                    const rp = new DateRangePicker(elem, {
-                        format:'dd-mm-yyyy',
-                        showOnFocus:true,
-                        orientation:"top"
-                    })
-                },
-                didOpen: () => {
-                    document.getElementById('start').removeAttribute('disabled')
-                    document.getElementById('end').removeAttribute('disabled')
-                },
-                preConfirm: () => {
-                    return [
-                        document.getElementById('start').value,
-                        document.getElementById('end').value
-                    ]
-                }
-            })
-
-            if (formValues) {
-                Swal.fire(JSON.stringify(formValues))
-            }
-
-        }
-
-        return {
-            toast:toast,
-            success:success,
-            error:error,
-            custom:custom
-        }
-    }
-
 </script>
 {{end}}
