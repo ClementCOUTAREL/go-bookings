@@ -7,6 +7,8 @@ import (
 	"net/http"
 
 	"github.com/ccoutarel/bookings/internal/config"
+	"github.com/ccoutarel/bookings/internal/forms"
+	"github.com/ccoutarel/bookings/internal/helpers"
 	"github.com/ccoutarel/bookings/internal/models"
 	"github.com/ccoutarel/bookings/internal/render"
 )
@@ -33,9 +35,6 @@ func NewHandlers(r *Repository) {
 
 // Home renders the home page
 func (m *Repository) Home(w http.ResponseWriter, r *http.Request) {
-	remoteIP := r.RemoteAddr
-	m.App.Session.Put(r.Context(), "remote_ip", remoteIP)
-
 	render.RenderTemplate(w, r, "home.page.html", &models.TemplateData{})
 }
 
@@ -86,7 +85,8 @@ func (m *Repository) AvailabilityJson(w http.ResponseWriter, r *http.Request) {
 
 	out, err := json.MarshalIndent(resp, "", "     ")
 	if err != nil {
-		log.Println("error creating JSON response")
+		helpers.ServerError(w, err)
+		return
 	}
 
 	log.Println(string(out))
@@ -97,10 +97,88 @@ func (m *Repository) AvailabilityJson(w http.ResponseWriter, r *http.Request) {
 
 // MakeReservation renders the make reservation page
 func (m *Repository) MakeReservation(w http.ResponseWriter, r *http.Request) {
-	render.RenderTemplate(w, r, "make_reservation.page.html", &models.TemplateData{})
+	var emptyReservation models.Reservation
+
+	data := make(map[string]interface{})
+	data["reservation"] = emptyReservation
+
+	render.RenderTemplate(w, r, "make_reservation.page.html", &models.TemplateData{
+		Form: forms.New(nil),
+		Data: data,
+	})
 }
 
 // PostMakeReservation handles the form send to make reservation
 func (m *Repository) PostMakeReservation(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Posted to make reservationy"))
+	err := r.ParseForm()
+	if err != nil {
+		helpers.ServerError(w, err)
+		return
+	}
+
+	reservation := models.Reservation{
+		FirstName: r.Form.Get("first_name"),
+		LastName:  r.Form.Get("last_name"),
+		Email:     r.Form.Get("email"),
+		Phone:     r.Form.Get("phone"),
+	}
+
+	form := forms.New(r.PostForm)
+
+	// form.Has("first_name", r)
+	form.Required("first_name", "last_name", "email", "phone")
+	form.MinLength("first_name", 3)
+	form.IsEmail("email")
+
+	if !form.Valid() {
+		data := make(map[string]interface{})
+		data["reservation"] = reservation
+
+		render.RenderTemplate(w, r, "make_reservation.page.html", &models.TemplateData{
+			Form: form,
+			Data: data,
+		})
+		return
+	}
+
+	m.App.Session.Put(r.Context(), "reservation", reservation)
+	http.Redirect(w, r, "/reservation-summary", http.StatusSeeOther)
+}
+
+// MakeReservationJson handles request for Availablitiy and sends JSON
+func (m *Repository) MakeReservationJson(w http.ResponseWriter, r *http.Request) {
+	resp := jsonResponse{
+		OK:      true,
+		Message: "Available",
+	}
+
+	out, err := json.MarshalIndent(resp, "", "     ")
+	if err != nil {
+		log.Println("error creating JSON response")
+	}
+
+	log.Println(string(out))
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(out)
+}
+
+// ReservationSummary renders the reservation summary page
+func (m *Repository) ReservationSummary(w http.ResponseWriter, r *http.Request) {
+	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
+	if !ok {
+		m.App.ErrorLog.Println("Can't get error from session")
+		m.App.Session.Put(r.Context(), "error", "Cant get reservation from session")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		return
+	}
+
+	m.App.Session.Remove(r.Context(), "reservation")
+
+	data := make(map[string]interface{})
+	data["reservation"] = reservation
+
+	render.RenderTemplate(w, r, "reservation_summary.page.html", &models.TemplateData{
+		Data: data,
+	})
 }

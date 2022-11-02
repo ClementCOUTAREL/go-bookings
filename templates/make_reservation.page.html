@@ -7,46 +7,37 @@
         <h2>Make reservation</h2>
     </div>
 
-    <form method="post" action="" class="needs-validation" novalidate>
+    {{$res := index .Data "reservation"}}
+    <form method="post" action=""  novalidate>
+        <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+
         <div class="row">
             <label for="first_name">First Name</label>
-            <input type="text" name="first_name" id="first_name" class="form-control" required>
-            <div class="valid-feedback">
-                Validated
-            </div>
-            <div class="invalid-feedback">
-                Invalid first name
-            </div>
+            {{with .Form.Errors.Get "first_name"}}
+                <label class="text-danger">{{.}}</label>
+            {{end}}
+            <input type="text" name="first_name" id="first_name" class='form-control {{with .Form.Errors.Get "first_name"}} is-invalid {{end}}' value="{{$res.FirstName}}" required>
         </div>
         <div class="row">
             <label for="last_name">Last Name</label>
-            <input type="text" name="last_name" id="last_name" class="form-control" required>
-            <div class="valid-feedback">
-                Validated
-            </div>
-            <div class="invalid-feedback">
-                Invalid last name
-            </div>
+            {{with .Form.Errors.Get "last_name"}}
+                <label class="text-danger">{{.}}</label>
+            {{end}}
+            <input type="text" name="last_name" id="last_name" class='form-control {{with .Form.Errors.Get "last_name"}} is-invalid {{end}}' value="{{$res.LastName}}" required>
         </div>
         <div class="row">
             <label for="email">Email</label>
-            <input type="email" name="email" id="email" class="form-control" required>
-            <div class="valid-feedback">
-                Validated
-            </div>
-            <div class="invalid-feedback">
-                Invalid email
-            </div>
+            {{with .Form.Errors.Get "email"}}
+                <label class="text-danger">{{.}}</label>
+            {{end}}
+            <input type="email" name="email" id="email" class='form-control {{with .Form.Errors.Get "email"}} is-invalid {{end}}' value="{{$res.Email}}" required>
         </div>
         <div class="row">
             <label for="phone">Phone number</label>
-            <input type="text" name="phone" id="phone" class="form-control" required>
-            <div class="valid-feedback">
-                Validated
-            </div>
-            <div class="invalid-feedback">
-                Invalid phone number
-            </div>
+            {{with .Form.Errors.Get "phone"}}
+                <label class="text-danger">{{.}}</label>
+            {{end}}
+            <input type="text" name="phone" id="phone" class='form-control {{with .Form.Errors.Get "phone"}} is-invalid {{end}}' value="{{$res.Phone}}" required>
         </div>
         <button type="submit" class="mt-3 btn btn-primary">Make reservation</button>
     </form>

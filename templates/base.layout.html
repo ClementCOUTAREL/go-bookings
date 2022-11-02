@@ -11,6 +11,11 @@
         <link rel="stylesheet" type="text/css" href="https://unpkg.com/notie/dist/notie.min.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vanillajs-datepicker@1.2.0/dist/css/datepicker-bs5.min.css">
         <link rel="stylesheet" href="/static/css/styles.css">
+        <style>
+            .my-footer {
+                background-color: green;
+            }
+        </style>
         {{block "css" .}}
         {{end}}
         <title>Reservation</title>
@@ -32,13 +37,13 @@
                             <a class="nav-link" href="/about">About</a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="/rooms" role="button" data-bs-toggle="dropdown"
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown"
                                 aria-expanded="false">
                                 Rooms
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="/rooms/colonels-quarters">Colonel's quarters</a></li>
-                                <li><a class="dropdown-item" href="/rooms/majors-suite">GMajor's suite</a></li>
+                                <li><a class="dropdown-item" href="/colonels-quarters">Colonel's quarters</a></li>
+                                <li><a class="dropdown-item" href="/majors-suite">GMajor's suite</a></li>
                             </ul>
                         </li>
                         <li class="nav-item">
@@ -228,6 +233,26 @@
         }
 
     </script>
+   
+    {{with .Error}}
+    <script>
+        notify("{{.}}","error")
+    </script>
+    {{end}}
+
+    {{with .Flash}}
+    <script>
+        notify("{{.}}","success")
+    </script>
+    {{end}}
+
+    {{with .Warning}}
+    <script>
+        notify("{{.}}","warning")
+    </script>
+    {{end}}
+
+    
         </body>
         </html>
 
