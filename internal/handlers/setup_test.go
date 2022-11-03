@@ -12,10 +12,12 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/ccoutarel/bookings/internal/config"
+	"github.com/ccoutarel/bookings/internal/driver"
 	"github.com/ccoutarel/bookings/internal/models"
 	"github.com/ccoutarel/bookings/internal/render"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/joho/godotenv"
 	"github.com/justinas/nosurf"
 )
 
@@ -46,6 +48,23 @@ func getRoutes() http.Handler {
 
 	app.Session = session
 
+	// Connect to db
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	dbName := os.Getenv("DB_NAME")
+	dbHost := os.Getenv("DB_HOST")
+	dbUser := os.Getenv("DB_USER")
+	dbPassword := os.Getenv("DB_PASSWORD")
+	dbPort := os.Getenv("DB_PORT")
+
+	log.Println("Connecting to DB ...")
+	db, err := driver.ConnectSQL(fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s", dbHost, dbPort, dbName, dbUser, dbPassword))
+	if err != nil {
+		log.Fatal("Cannot connect to DB")
+	}
 	tc, err := CreateTestTemplateCache()
 	if err != nil {
 		log.Fatal(err)
@@ -54,9 +73,9 @@ func getRoutes() http.Handler {
 	app.TemplateCache = tc
 	app.UseCache = true
 
-	repo := NewRepo(&app)
+	repo := NewRepo(&app, db)
 	NewHandlers(repo)
-	render.NewTemplates(&app)
+	render.Template(&app)
 
 	mux := chi.NewRouter()
 

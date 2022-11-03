@@ -9,14 +9,12 @@ import (
 	"time"
 
 	"github.com/ccoutarel/bookings/internal/config"
-	"github.com/ccoutarel/bookings/internal/database"
+	"github.com/ccoutarel/bookings/internal/driver"
 	"github.com/ccoutarel/bookings/internal/handlers"
 	"github.com/ccoutarel/bookings/internal/helpers"
 	"github.com/ccoutarel/bookings/internal/models"
 	"github.com/ccoutarel/bookings/internal/render"
 	"github.com/joho/godotenv"
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 
 	"github.com/alexedwards/scs/v2"
 )
@@ -29,10 +27,11 @@ var infoLog *log.Logger
 var errorLog *log.Logger
 
 func main() {
-	err := run()
+	db, err := run()
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.SQL.Close()
 
 	fmt.Printf("Starting application on port %s", portNumber)
 
@@ -48,19 +47,25 @@ func main() {
 
 }
 
-func run() error {
+func run() (*driver.DB, error) {
 	// Data stored in the session
+	gob.Register(models.User{})
+	gob.Register(models.Room{})
+	gob.Register(models.Restriction{})
 	gob.Register(models.Reservation{})
+	gob.Register(models.RoomRestriction{})
 
 	// Set production
 	app.InProduction = false
 
+	// Setup loggers
 	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	app.InfoLog = infoLog
 
 	errorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 	app.ErrorLog = errorLog
 
+	// Create a session for the application
 	session = scs.New()
 	session.Lifetime = 24 * time.Hour
 	session.Cookie.Persist = true
@@ -69,15 +74,8 @@ func run() error {
 
 	app.Session = session
 
-	tc, err := render.CreateTemplateCache()
-	if err != nil {
-		return err
-	}
-
-	app.TemplateCache = tc
-	app.UseCache = false
-
-	err = godotenv.Load()
+	// Connect to db
+	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
@@ -88,21 +86,27 @@ func run() error {
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbPort := os.Getenv("DB_PORT")
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai", dbHost, dbUser, dbPassword, dbName, dbPort)
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	log.Println("Connecting to DB ...")
+	db, err := driver.ConnectSQL(fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s", dbHost, dbPort, dbName, dbUser, dbPassword))
 	if err != nil {
-		log.Println("Unable to connect to the db")
+		log.Fatal("Cannot connect to DB")
 	}
-	log.Println("Connected to the database")
 
-	db.AutoMigrate(&database.User{})
+	// Create the app template cache
+	tc, err := render.CreateTemplateCache()
+	if err != nil {
+		return nil, err
+	}
 
-	repo := handlers.NewRepo(&app)
+	app.TemplateCache = tc
+	app.UseCache = false
+
+	repo := handlers.NewRepo(&app, db)
 	handlers.NewHandlers(repo)
-	render.NewTemplates(&app)
+	render.NewRenderer(&app)
 	helpers.NewHelpers(&app)
 
 	// http.HandleFunc("/", handlers.Repo.Home)
 	// http.HandleFunc("/about", handlers.Repo.About)
-	return nil
+	return db, nil
 }
